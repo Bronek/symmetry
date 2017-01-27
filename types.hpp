@@ -46,6 +46,19 @@ namespace sym {
             return std::make_pair(pp.first->child[i], pp.second->child[1 - i]);
         }
     };
+
+    // Recursive check if two nodes are symmetrical to each other
+    template <typename Type> bool symmr(const node<Type>* l, const node<Type>* r)
+    {
+        return ((l->child[0] == nullptr) == (r->child[1] == nullptr))
+               && ((l->child[1] == nullptr) == (r->child[0] == nullptr))
+               && l->value == r->value
+               && ((l->child[0] == nullptr) || symmr(l->child[0], r->child[1]))
+               && ((l->child[1] == nullptr) || symmr(l->child[1], r->child[0]));
+    }
+
+    template <typename Type> bool symmr(const tree<Type>& t)
+    {
+        return symmr(t.head, t.head);
+    }
 }
-
-

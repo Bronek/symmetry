@@ -84,3 +84,40 @@ TEST(test_tree, tree_append)
     EXPECT_EQ(n1->child[0]->child[1], pp4.second);
     EXPECT_EQ(t.data.size(), 9);
 }
+
+TEST(test_algo, recursive)
+{
+    using namespace sym;
+    tree<int> t {42};
+    const auto n0 = t.append(t.head, 0, 41);
+    const auto n1 = t.append(t.head, 1, 41);
+    auto pp1 = std::make_pair(n0, n1);
+    auto pp2 = t.append(pp1, 0, 40);
+    auto pp3 = t.append(pp1, 1, 39);
+    auto pp4 = t.append(pp3, 0, 38);
+
+    EXPECT_FALSE(symmr(t.head, n1));
+    EXPECT_TRUE(symmr(n0, n1));
+    EXPECT_TRUE(symmr(pp1.first, pp1.second));
+    EXPECT_TRUE(symmr(pp1.second, pp1.first));
+    EXPECT_TRUE(symmr(pp2.first, pp2.second));
+    EXPECT_TRUE(symmr(pp2.second, pp2.first));
+    EXPECT_TRUE(symmr(pp3.first, pp3.second));
+    EXPECT_TRUE(symmr(pp3.second, pp3.first));
+    EXPECT_TRUE(symmr(pp4.first, pp4.second));
+    EXPECT_TRUE(symmr(pp4.second, pp4.first));
+    EXPECT_FALSE(symmr(pp1.first, pp3.second));
+    EXPECT_FALSE(symmr(pp2.second, pp4.first));
+    EXPECT_FALSE(symmr(pp2.first, pp3.second));
+    EXPECT_FALSE(symmr(pp4.second, pp1.first));
+    EXPECT_FALSE(symmr(t.head, pp4.second));
+    EXPECT_FALSE(symmr(t.head, pp3.first));
+    EXPECT_FALSE(symmr(t.head, pp2.second));
+    EXPECT_FALSE(symmr(t.head, pp1.first));
+    EXPECT_TRUE(symmr(t.head, t.head));
+    EXPECT_TRUE(symmr(t));
+
+    // Break symmetry
+    t.append(pp4.first, 0, 13);
+    EXPECT_FALSE(symmr(t));
+}
