@@ -85,39 +85,74 @@ TEST(test_tree, tree_append)
     EXPECT_EQ(t.data.size(), 9);
 }
 
-TEST(test_algo, recursive)
+struct test_algo : ::testing::Test {
+    sym::tree<int> t {42};
+    std::pair<sym::node<int>*, sym::node<int>*> pp[5];
+
+    test_algo()
+    {
+        pp[0].first = t.append(t.head, 0, 41);
+        pp[0].second = t.append(t.head, 1, 41);
+        pp[1] = t.append(pp[0], 0, 40);
+        pp[2] = t.append(pp[0], 1, 39);
+        pp[3] = t.append(pp[2], 0, 38);
+    }
+};
+
+TEST_F(test_algo, recursive)
 {
     using namespace sym;
-    tree<int> t {42};
-    const auto n0 = t.append(t.head, 0, 41);
-    const auto n1 = t.append(t.head, 1, 41);
-    auto pp1 = std::make_pair(n0, n1);
-    auto pp2 = t.append(pp1, 0, 40);
-    auto pp3 = t.append(pp1, 1, 39);
-    auto pp4 = t.append(pp3, 0, 38);
 
-    EXPECT_FALSE(symmr(t.head, n1));
-    EXPECT_TRUE(symmr(n0, n1));
-    EXPECT_TRUE(symmr(pp1.first, pp1.second));
-    EXPECT_TRUE(symmr(pp1.second, pp1.first));
-    EXPECT_TRUE(symmr(pp2.first, pp2.second));
-    EXPECT_TRUE(symmr(pp2.second, pp2.first));
-    EXPECT_TRUE(symmr(pp3.first, pp3.second));
-    EXPECT_TRUE(symmr(pp3.second, pp3.first));
-    EXPECT_TRUE(symmr(pp4.first, pp4.second));
-    EXPECT_TRUE(symmr(pp4.second, pp4.first));
-    EXPECT_FALSE(symmr(pp1.first, pp3.second));
-    EXPECT_FALSE(symmr(pp2.second, pp4.first));
-    EXPECT_FALSE(symmr(pp2.first, pp3.second));
-    EXPECT_FALSE(symmr(pp4.second, pp1.first));
-    EXPECT_FALSE(symmr(t.head, pp4.second));
-    EXPECT_FALSE(symmr(t.head, pp3.first));
-    EXPECT_FALSE(symmr(t.head, pp2.second));
-    EXPECT_FALSE(symmr(t.head, pp1.first));
+    EXPECT_FALSE(symmr(t.head, pp[0].first));
+    EXPECT_FALSE(symmr(t.head, pp[0].second));
+    EXPECT_TRUE(symmr(pp[0].first, pp[0].second));
+    EXPECT_TRUE(symmr(pp[0].second, pp[0].first));
+    EXPECT_TRUE(symmr(pp[1].first, pp[1].second));
+    EXPECT_TRUE(symmr(pp[1].second, pp[1].first));
+    EXPECT_TRUE(symmr(pp[2].first, pp[2].second));
+    EXPECT_TRUE(symmr(pp[2].second, pp[2].first));
+    EXPECT_TRUE(symmr(pp[3].first, pp[3].second));
+    EXPECT_TRUE(symmr(pp[3].second, pp[3].first));
+    EXPECT_FALSE(symmr(pp[0].first, pp[2].second));
+    EXPECT_FALSE(symmr(pp[1].second, pp[3].first));
+    EXPECT_FALSE(symmr(pp[1].first, pp[2].second));
+    EXPECT_FALSE(symmr(pp[3].second, pp[0].first));
+    EXPECT_FALSE(symmr(t.head, pp[3].second));
+    EXPECT_FALSE(symmr(t.head, pp[2].first));
+    EXPECT_FALSE(symmr(t.head, pp[1].second));
+    EXPECT_FALSE(symmr(t.head, pp[0].first));
     EXPECT_TRUE(symmr(t.head, t.head));
     EXPECT_TRUE(symmr(t));
 
     // Break symmetry
-    t.append(pp4.first, 0, 13);
+    t.append(pp[3].first, 0, 13);
     EXPECT_FALSE(symmr(t));
+}
+
+TEST_F(test_algo, iterative)
+{
+    using namespace sym;
+
+    EXPECT_TRUE(symmi(t));
+
+    // Break symmetry
+    t.append(pp[3].first, 0, 13);
+    EXPECT_FALSE(symmi(t));
+
+    // Fix symmetry
+    t.append(pp[3].second, 1, 13);
+    EXPECT_TRUE(symmi(t));
+
+    // A tree with head only is by definition symmetrical
+    tree<int> t1 {16};
+    EXPECT_TRUE(symmi(t1));
+    // Break symmetry
+    t1.append(t1.head, 0, 15);
+    EXPECT_FALSE(symmi(t1));
+    // Add second child, symmetric topology but not symmetric value
+    auto p1 = t1.append(t1.head, 1, 14);
+    EXPECT_FALSE(symmi(t1));
+    // Update value of second child to make it symmetric
+    p1->value = 15;
+    EXPECT_TRUE(symmi(t1));
 }

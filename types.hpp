@@ -57,8 +57,51 @@ namespace sym {
                && ((l->child[1] == nullptr) || symmr(l->child[1], r->child[0]));
     }
 
+    // Wrapper to run recursive check on the whole tree
     template <typename Type> bool symmr(const tree<Type>& t)
     {
         return symmr(t.head, t.head);
+    }
+
+    // Iterative check if two children are symmetrical to each other
+    template <typename Type> bool symmi(const tree<Type>& t)
+    {
+        // This last node will be always tracking next[0] node only
+        const node<Type>* last = nullptr;
+        const node<Type>* next[2] = {t.head, t.head};
+        while (((next[0]->child[0] == nullptr) == (next[1]->child[1] == nullptr))
+                && ((next[0]->child[1] == nullptr) == (next[1]->child[0] == nullptr))
+                && next[0]->value == next[1]->value)
+        {
+            // Figure out the next node to visit
+            if (next[0]->child[0] != nullptr
+                && last != next[0]->child[0]
+                && last != next[0]->child[1])
+            {
+                // Left node is available and we are not backing up the tree from either left or right side
+                last = next[0];
+                next[0] = next[0]->child[0];
+                next[1] = next[1]->child[1];
+            }
+            else if (next[0]->child[1] != nullptr
+                     && last != next[0]->child[1])
+            {
+                // Right node is available and we are not backing up the tree from right side
+                last = next[0];
+                next[0] = next[0]->child[1];
+                next[1] = next[1]->child[0];
+            }
+            else
+            {
+                // We are backing up the tree ...
+                if (next[0] == t.head)
+                    return true; // ... but we already visited all the nodes
+                last = next[0];
+                next[0] = next[0]->parent;
+                next[1] = next[1]->parent;
+            }
+        }
+
+        return false;
     }
 }
